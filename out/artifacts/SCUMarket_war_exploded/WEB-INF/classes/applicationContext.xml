@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!-- 配置数据源-->
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://cd-cdb-2x1l2uvg.sql.tencentcdb.com:63838/SCUMarket"/>
+        <property name="username" value="root"/>
+        <property name="password" value="PYJ19990328"/>
+    </bean>
+
+    <!-- 配置数sqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+    </bean>
+
+    <!-- 声明式事物配置-->
+    <!-- 配置事物管理器-->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 配置事物通知-->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <!--配置哪些方法使用什么样的事物，配置事物的传播特性-->
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="select" read-only="true"/>
+            <tx:method name="insert" propagation="REQUIRED"/>
+            <tx:method name="update" propagation="REQUIRED"/>
+            <tx:method name="delete" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+        <aop:pointcut id="pointcut" expression="execution(* com.Dragonist.Service.Impl.*.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut"/>
+    </aop:config>
+
+    <!--user表-->
+    <bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        <property name="mapperInterface" value="com.Dragonist.DAO.UserMapper"/>
+    </bean>
+    <bean id="userService" class="com.Dragonist.Service.Impl.UserImpl">
+        <property name="userMapper" ref="userMapper"/>
+    </bean>
+
+
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="maxUploadSize" value="10000000"/>
+    </bean>
+
+    <bean id="commodityMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        <property name="mapperInterface" value="com.Dragonist.DAO.CommodityMapper"/>
+    </bean>
+    <bean id="commodityService" class="com.Dragonist.Service.Impl.CommodityImpl">
+        <property name="commodityMapper" ref="commodityMapper"/>
+    </bean>
+    <bean id="commentMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        <property name="mapperInterface" value="com.Dragonist.DAO.CommentMapper"/>
+    </bean>
+    <bean id="commentService" class="com.Dragonist.Service.Impl.CommentImp">
+        <property name="commentMapper" ref="commentMapper"/>
+    </bean>
+</beans>
